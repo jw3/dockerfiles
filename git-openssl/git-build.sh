@@ -3,40 +3,63 @@
 #
 # build git with an openssl curl and without gnutls on Ubuntu (14.04,)
 #
+# developed using debian:jessie image
+#
+#
 
 GITVER=2.7.1
 CURLVER=7.47.0
-SUDO=sudo
 WORKDIR=/tmp
 CURLDIR=/usr/local
 GITDIR=/usr/local
 LD_LIBRARY_PATH=$CURLDIR/lib:$LD_LIBRARY_PATH
+SUDO=
 
 $SUDO apt-get update && \
-$SUDO apt-get install -y \
-	libssl-dev \
-	libexpat1-dev \
-	gettext
+    $SUDO apt-get install -y --no-install-recommends \
+    gcc             \
+    make            \
+    wget            \
+    gettext         \
+    binutils        \
+    libssl-dev      \
+    libexpat1-dev
 
-$mkdir $WORKDIR 
+cd /tmp
+mkdir $WORKDIR
 
 # curl
-cd $WORKDIR
-curl -o curl-$CURLVER.tar.gz https://curl.haxx.se/download/curl-$CURLVER.tar.gz
-tar xzf curl-$CURLVER.tar.gz
-cd curl-$CURLVER
+CURLNM=curl-$CURLVER
+CURLWD=$WORKDIR/$CURLNM
 
-./configure --prefix=$CURLDIR --libdir=/usr/lib/x86_64-linux-gnu --without-gnutls
-$SUDO make install
+wget --no-check-certificate -O $WORKDIR/$CURLNM.tar.gz https://curl.haxx.se/download/curl-$CURLVER.tar.gz
+mkdir -p $CURLWD
+tar xzf $WORKDIR/$CURLNM.tar.gz -C $CURLWD --strip-components=1
+
+$CURLWD/configure --prefix=$CURLDIR --without-gnutls
+$SUDO make -C $CURLWD
+$SUDO make -C $CURLWD install
 
 # git
-cd $WORKDIR
-curl -o v$GITVER.tar.gz https://github.com/git/git/archive/v$GITVER.tar.gz
-tar xzf v$GITVER.tar.gz
-cd git-$GITVER
+GITNM=v$GITVER
+GITWD=$WORKDIR/$GITNM
 
-make prefix=$GITDIR CURLDIR=/usr/local NO_R_TO_GCC_LINKER=1 all
-$SUDO make prefix=$GITDIR CURLDIR=/usr/local NO_R_TO_GCC_LINKER=1 install
+wget --no-check-certificate -O $WORKDIR/$GITNM.tar.gz https://codeload.github.com/git/git/tar.gz/$GITNM
+mkdir -p $GITWD
+tar xzf $WORKDIR/$GITNM.tar.gz -C $GITWD --strip-components=1
 
-$SUDO ldconfig
+make -f $GITWD/Makefile prefix=$GITDIR CURLDIR=$CURLDIR NO_R_TO_GCC_LINKER=1 all
+$SUDO make -C $GITWD prefix=$GITDIR CURLDIR=$CURLDIR NO_R_TO_GCC_LINKER=1 install
+
+$SUDO apt-get purge -y \
+    gcc             \
+    make            \
+    wget            \
+    gettext         \
+    binutils        \
+    libssl-dev      \
+    libexpat1-dev
+
+$SUDO rm -rf /var/lib/apt/lists/*
+$SUDO rm -rf /tmp/*
 
