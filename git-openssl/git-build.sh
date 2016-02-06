@@ -5,6 +5,9 @@
 #
 # developed using debian:jessie image
 #
+# v0.1 - 283.3 MB
+# - git  2.7.1
+# - curl 7.47.0
 #
 
 GITVER=2.7.1
