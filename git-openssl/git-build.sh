@@ -15,7 +15,6 @@ CURLVER=7.47.0
 WORKDIR=/tmp
 CURLDIR=/usr/local
 GITDIR=/usr/local
-LD_LIBRARY_PATH=$CURLDIR/lib:$LD_LIBRARY_PATH
 SUDO=
 
 $SUDO apt-get update && \
